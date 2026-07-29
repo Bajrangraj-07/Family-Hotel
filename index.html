@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Table Order Manager · 8 Tables</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&family=Noto+Sans+Devanagari:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --wood-1:#c9924f;
+    --wood-2:#a8703a;
+    --wood-3:#8b5a2b;
+    --cream:#fbf1de;
+    --panel:#fffaf1;
+    --charcoal:#2a231c;
+    --charcoal-soft:#5a4f42;
+    --spice:#b23a2e;
+    --spice-dark:#8f2e24;
+    --sage:#4f7a54;
+    --sage-soft:#e6efe3;
+    --line:#e7d9bf;
+    --chair:#ffffff;
+    --chair-line:#d8cdb9;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--cream);
+    background-image:
+      radial-gradient(circle at 15% 10%, rgba(178,58,46,0.05), transparent 40%),
+      radial-gradient(circle at 85% 90%, rgba(79,122,84,0.06), transparent 45%);
+    color:var(--charcoal);
+    font-family:'Inter','Noto Sans Devanagari',sans-serif;
+    min-height:100vh;
+  }
+  header.top{
+    padding:28px 32px 18px;
+    border-bottom:1px solid var(--line);
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:12px;
+  }
+  header.top .title-block .eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--spice);
+    font-weight:600;
+    margin-bottom:6px;
+  }
+  header.top h1{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:32px;
+    margin:0;
+    color:var(--charcoal);
+  }
+  header.top .sub{
+    font-size:13px;
+    color:var(--charcoal-soft);
+    margin-top:4px;
+  }
+  .hall-total{
+    text-align:right;
+    font-family:'IBM Plex Mono',monospace;
+  }
+  .hall-total .label{
+    font-size:11px;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:var(--charcoal-soft);
+  }
+  .hall-total .amount{
+    font-size:26px;
+    font-weight:600;
+    color:var(--sage);
+  }
+
+  main{
+    padding:32px;
+    display:flex;
+    align-items:flex-start;
+    justify-content:center;
+    gap:clamp(12px, 3vw, 40px);
+  }
+  .col{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    width:280px;
+    flex-shrink:0;
+    padding:0 18px;
+  }
+  .col + .col{
+    border-left:1px dashed var(--line);
+  }
+  .col-label{
+    flex-shrink:0;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10.5px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:var(--charcoal-soft);
+    text-align:center;
+    padding-bottom:16px;
+  }
+  .col-tables{
+    width:100%;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:34px;
+  }
+
+  .table-unit{
+    position:relative;
+    width:250px;
+    height:210px;
+    flex-shrink:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .tabletop{
+    width:92.8%;
+    height:37.1%;
+    border-radius:6px;
+    background:
+      repeating-linear-gradient(100deg, rgba(0,0,0,0.06) 0 2px, transparent 2px 9px),
+      linear-gradient(155deg, var(--wood-1), var(--wood-2) 55%, var(--wood-3));
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.12), 0 8px 18px -10px rgba(60,35,10,0.45);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    color:#fff;
+    text-shadow:0 1px 2px rgba(0,0,0,0.3);
+  }
+  .tabletop .num{
+    font-family:'Fraunces',serif;
+    font-weight:700;
+    font-size:17px;
+    letter-spacing:.03em;
+    line-height:1;
+    white-space:nowrap;
+  }
+  .tabletop .num::before{
+    content:'TABLE ';
+  }
+
+  .chair{
+    position:absolute;
+    width:16.8%;
+    height:28.6%;
+    border-radius:38% 38% 14% 14%;
+    background:linear-gradient(160deg, #3c2b1f, #1c130c 75%);
+    border:1.5px solid #0f0a06;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    font-family:'IBM Plex Mono',monospace;
+    box-shadow:0 4px 10px -5px rgba(20,10,0,0.55);
+    transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+  }
+  .chair:hover{
+    transform:translateY(-2px);
+    box-shadow:0 7px 16px -6px rgba(20,10,0,0.6);
+    border-color:var(--spice);
+  }
+  .chair:focus-visible{
+    outline:2.5px solid var(--spice);
+    outline-offset:2px;
+  }
+  .chair .seat-no{
+    font-size:8px;
+    color:#cbb89a;
+    letter-spacing:.04em;
+  }
+  .chair .amt{
+    font-size:10.5px;
+    font-weight:600;
+    color:#fff;
+    margin-top:1px;
+  }
+  .chair.has-order{
+    background:linear-gradient(160deg, #3c5a3f, #223423 75%);
+    border-color:var(--sage);
+  }
+  .chair.has-order .amt{ color:#d9f0da; }
+  .chair.has-order::after{
+    content:'';
+    position:absolute;
+    top:-4px; right:-4px;
+    width:9px; height:9px;
+    border-radius:50%;
+    background:var(--spice);
+    box-shadow:0 0 0 2px var(--panel);
+  }
+  .chair .hist-dot{
+    position:absolute;
+    bottom:-4px; left:-4px;
+    font-size:8px;
+    background:var(--charcoal);
+    color:#fff;
+    border-radius:8px;
+    padding:1px 4px;
+    line-height:1.3;
+    display:none;
+  }
+  .chair.has-history .hist-dot{ display:block; }
+
+  .c1{ top:8%; left:17.6%; }
+  .c2{ top:8%; right:17.6%; }
+  .c3{ bottom:8%; left:17.6%; }
+  .c4{ bottom:8%; right:17.6%; }
+
+  /* Modal */
+  .overlay{
+    position:fixed; inset:0;
+    background:rgba(30,20,10,0.45);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    z-index:50;
+  }
+  .overlay.open{ display:flex; }
+  .modal{
+    background:var(--panel);
+    width:100%;
+    max-width:480px;
+    max-height:88vh;
+    border-radius:18px;
+    box-shadow:0 24px 60px -20px rgba(30,20,10,0.55);
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+    animation:rise .18s ease;
+  }
+  @keyframes rise{ from{ transform:translateY(14px); opacity:0;} to{ transform:translateY(0); opacity:1;} }
+  .modal-head{
+    padding:20px 22px 0;
+    border-bottom:1px solid var(--line);
+  }
+  .modal-head .head-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .modal-head h2{
+    font-family:'Fraunces',serif;
+    font-size:21px;
+    font-weight:600;
+    margin:0;
+  }
+  .modal-head .close-btn{
+    background:none; border:none; cursor:pointer;
+    font-size:20px; color:var(--charcoal-soft);
+    line-height:1; padding:4px 8px; border-radius:8px;
+  }
+  .modal-head .close-btn:hover{ background:var(--line); }
+
+  .tabs{
+    display:flex;
+    gap:4px;
+    margin-top:14px;
+  }
+  .tab-btn{
+    background:none;
+    border:none;
+    border-bottom:2px solid transparent;
+    padding:8px 4px 10px;
+    margin-right:18px;
+    font-family:'Inter',sans-serif;
+    font-size:13px;
+    font-weight:600;
+    color:var(--charcoal-soft);
+    cursor:pointer;
+  }
+  .tab-btn.active{
+    color:var(--spice);
+    border-bottom-color:var(--spice);
+  }
+
+  .item-list, .history-list{
+    overflow-y:auto;
+    padding:6px 22px;
+    flex:1;
+  }
+  .history-list{ display:none; }
+  .item-row{
+    padding:14px 0;
+    border-bottom:1px solid var(--line);
+  }
+  .item-row:last-child{ border-bottom:none; }
+  .item-row .item-name{
+    font-weight:600;
+    font-size:14.5px;
+    margin-bottom:8px;
+  }
+  .variant-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding:6px 0;
+  }
+  .variant-row .v-label{
+    font-size:12.5px;
+    color:var(--charcoal-soft);
+    flex:1;
+  }
+  .variant-row .v-price{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12.5px;
+    color:var(--charcoal-soft);
+    width:56px;
+    text-align:right;
+  }
+  .stepper{
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .stepper button{
+    width:26px; height:26px;
+    border-radius:7px;
+    border:1px solid var(--chair-line);
+    background:#fff;
+    font-size:15px;
+    line-height:1;
+    cursor:pointer;
+    color:var(--charcoal);
+  }
+  .stepper button:hover{ border-color:var(--spice); color:var(--spice); }
+  .stepper button:disabled{ opacity:.35; cursor:not-allowed; }
+  .stepper .qty{
+    width:20px;
+    text-align:center;
+    font-family:'IBM Plex Mono',monospace;
+    font-weight:600;
+    font-size:13px;
+  }
+
+  .price-picker{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    flex-wrap:wrap;
+    margin-bottom:10px;
+  }
+  .price-chip{
+    border:1px solid var(--chair-line);
+    background:#fff;
+    border-radius:8px;
+    padding:5px 10px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    cursor:pointer;
+    color:var(--charcoal-soft);
+  }
+  .price-chip.active{
+    background:var(--spice);
+    border-color:var(--spice);
+    color:#fff;
+  }
+  .price-custom{
+    width:74px;
+    border:1px solid var(--chair-line);
+    border-radius:8px;
+    padding:5px 8px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+  }
+  .price-custom-label{
+    font-size:11px;
+    color:var(--charcoal-soft);
+    margin-right:2px;
+  }
+
+  .hist-entry{
+    padding:12px 0;
+    border-bottom:1px solid var(--line);
+  }
+  .hist-entry:last-child{ border-bottom:none; }
+  .hist-entry .hist-top{
+    display:flex;
+    justify-content:space-between;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    color:var(--charcoal-soft);
+    margin-bottom:6px;
+  }
+  .hist-entry .hist-total{
+    font-weight:600;
+    color:var(--sage);
+  }
+  .hist-entry ul{
+    margin:0;
+    padding-left:18px;
+    font-size:12.5px;
+    color:var(--charcoal);
+  }
+  .empty-hist{
+    padding:30px 4px;
+    text-align:center;
+    color:var(--charcoal-soft);
+    font-size:13px;
+  }
+
+  .modal-foot{
+    padding:16px 22px 20px;
+    border-top:1px solid var(--line);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+  }
+  .modal-foot .total-label{
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:.1em;
+    color:var(--charcoal-soft);
+  }
+  .modal-foot .total-amt{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:22px;
+    font-weight:600;
+  }
+  .btn-group{ display:flex; gap:8px; }
+  .save-btn, .complete-btn{
+    border:none;
+    padding:12px 16px;
+    border-radius:10px;
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:13px;
+    cursor:pointer;
+    transition:background .15s ease;
+  }
+  .save-btn{
+    background:var(--line);
+    color:var(--charcoal);
+  }
+  .save-btn:hover{ background:#dccba9; }
+  .complete-btn{
+    background:var(--sage);
+    color:#fff;
+  }
+  .complete-btn:hover{ background:#3f6444; }
+
+  @media (max-width:760px){
+    main{ flex-direction:column; align-items:center; gap:28px; padding:24px 16px; }
+    .col{ border-left:none !important; padding:20px 0; width:auto; }
+    header.top{ padding:22px 20px 16px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="title-block">
+    <div class="eyebrow">Dining Hall</div>
+    <h1>Table Order Manager</h1>
+    <div class="sub">8 tables · 4 seats each · tap a chair to take that seat's order</div>
+  </div>
+  <div class="hall-total">
+    <div class="label">Hall total</div>
+    <div class="amount" id="hallTotal">₹0</div>
+    <div id="syncStatus" style="font-family:'IBM Plex Mono',monospace;font-size:10px;margin-top:4px;color:var(--charcoal-soft);">Connecting…</div>
+  </div>
+</header>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<main id="hall"></main>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="head-row">
+        <h2 id="modalTitle">Table 1 · Seat 1</h2>
+        <button class="close-btn" id="closeBtn" aria-label="Close">✕</button>
+      </div>
+      <div class="tabs">
+        <button class="tab-btn active" id="tabOrder">Current order</button>
+        <button class="tab-btn" id="tabHistory">History (<span id="histCount">0</span>)</button>
+      </div>
+    </div>
+    <div class="item-list" id="itemList"></div>
+    <div class="history-list" id="historyList"></div>
+    <div class="modal-foot">
+      <div>
+        <div class="total-label">Seat total</div>
+        <div class="total-amt" id="seatTotal">₹0</div>
+      </div>
+      <div class="btn-group">
+        <button class="save-btn" id="saveBtn">Save &amp; close</button>
+        <button class="complete-btn" id="completeBtn">Complete order</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Menu kept in the order given — most-used items first, plus the newly added items.
+  const MENU = [
+    { id:'tadka',   name:'Dal Tadka',      variants:[{k:'half',label:'Half',price:30},{k:'full',label:'Full',price:60}] },
+    { id:'roti',    name:'Roti',           variants:[{k:'pc',label:'Per piece',price:5}] },
+    { id:'chawal',  name:'Chawal (Rice)',  variants:[{k:'half',label:'Half',price:20},{k:'full',label:'Full',price:40}] },
+    { id:'chana',   name:'Chana Masala',   variants:[{k:'half',label:'Half',price:30},{k:'full',label:'Full',price:60}] },
+    { id:'paneer',  name:'Paneer',         variants:[{k:'half',label:'Half',price:50},{k:'full',label:'Full',price:100}] },
+    { id:'mixveg',  name:'Mix Veg',        variants:[{k:'half',label:'Half',price:50},{k:'full',label:'Full',price:100}] },
+    { id:'egg',     name:'Egg Curry',      variants:[{k:'p1',label:'1 piece',price:20},{k:'half',label:'Half (2 pc)',price:40},{k:'full',label:'Full (4 pc)',price:40}] },
+    { id:'chicken', name:'Chicken',        variants:[{k:'pc',label:'Per piece',price:30}] },
+    { id:'fish',    name:'Fish',           variants:[{k:'pc',label:'Per piece',price:30}] },
+    { id:'water',   name:'पानी बोतल (Water Bottle)', variants:[{k:'p10',label:'₹10 bottle',price:10},{k:'p15',label:'₹15 bottle',price:15},{k:'p20',label:'₹20 bottle',price:20}] },
+    { id:'cigarette', name:'सिगरेट (Cigarette)', variants:[{k:'p10',label:'₹10',price:10},{k:'p15',label:'₹15',price:15},{k:'p20',label:'₹20',price:20}] },
+    { id:'eggtadka', name:'अंडा तड़का (Egg Tadka)', type:'custom', options:[45,60,90], defaultPrice:45 },
+    { id:'eggbhujiya', name:'अंडा भुजिया करी (Egg Bhujiya Curry)', variants:[{k:'p2',label:'2 pieces',price:40}] },
+    { id:'omelette', name:'Omelette', variants:[{k:'full',label:'Full (2 egg)',price:30},{k:'half',label:'Half (1 egg)',price:15}] },
+  ];
+
+  // Floor plan: left column has 8 (top), 7 (below). Centre column has 6.
+  // Right column has 1 at the bottom, so displayed top-to-bottom it's 5,4,3,2,1.
+  const COLUMNS = [
+    { label:'Left · 2 tables',  tables:[8,7] },
+    { label:'Centre · 1 table', tables:[6] },
+    { label:'Right · 5 tables', tables:[5,4,3,2,1] },
+  ];
+
+  // orders[tableNo][seatNo][itemId] = { [variantKey]: qty }  OR  { price, qty } for custom items
+  const orders = {};
+  // history[tableNo][seatNo] = [{ time, lines:[{name, qty, price, lineTotal}], total }]
+  const history = {};
+  for (let t=1;t<=8;t++){
+    orders[t] = {}; history[t] = {};
+    for (let s=1;s<=4;s++){ orders[t][s] = {}; history[t][s] = []; }
+  }
+
+  let activeTable = null, activeSeat = null, activeTab = 'order';
+
+  // ============================================================
+  // FIREBASE SETUP — paste your own project's config below.
+  // Get this from: Firebase Console → Project Settings → General
+  // → "Your apps" → Web app → SDK setup and configuration
+  // ============================================================
+  // Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyCrtiUDykYLlOirasVyAfGDq1V6X_EGom4",
+  authDomain: "family--hotel.firebaseapp.com",
+  projectId: "family--hotel",
+  storageBucket: "family--hotel.firebasestorage.app",
+  messagingSenderId: "933684295312",
+  appId: "1:933684295312:web:a8e163d58228c227d78a15",
+  measurementId: "G-XLN1Z5B9QR"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+
+  let db = null, hallDocRef = null, firebaseReady = false;
+  const syncStatusEl = document.getElementById('syncStatus');
+
+  try {
+    if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "YOUR_API_KEY") {
+      firebase.initializeApp(firebaseConfig);
+      db = firebase.firestore();
+      hallDocRef = db.collection('hotel').doc('hall-data');
+      firebaseReady = true;
+    } else {
+      if (syncStatusEl) syncStatusEl.textContent = 'Firebase config not set — data won\'t sync';
+    }
+  } catch (e) {
+    console.warn('Firebase init failed:', e);
+    if (syncStatusEl) syncStatusEl.textContent = 'Firebase error — check console';
+  }
+
+  // Writes the full current state to Firestore (called after every order edit)
+  function persist(){
+    if (!firebaseReady) return;
+    hallDocRef.set({ orders, history }).catch(e => {
+      console.warn('Firestore save failed:', e);
+      if (syncStatusEl) syncStatusEl.textContent = 'Save failed — check connection';
+    });
+  }
+
+  // Merges incoming Firestore data into our local orders/history objects
+  function mergeIncoming(data){
+    for (let t=1;t<=8;t++){
+      for (let s=1;s<=4;s++){
+        if (data.orders && data.orders[t] && data.orders[t][s]) orders[t][s] = data.orders[t][s];
+        if (data.history && data.history[t] && data.history[t][s]) history[t][s] = data.history[t][s];
+      }
+    }
+  }
+
+  if (firebaseReady){
+    hallDocRef.onSnapshot((doc) => {
+      if (doc.exists){
+        mergeIncoming(doc.data());
+      }
+      if (syncStatusEl){
+        syncStatusEl.textContent = doc.metadata.fromCache ? 'Offline (showing cached data)' : 'Synced ✓ live';
+      }
+      renderHall();
+      // If a seat's modal is currently open, refresh it too so a change from
+      // another device shows up immediately.
+      const overlayOpen = document.getElementById('overlay').classList.contains('open');
+      if (overlayOpen && activeTable){
+        renderItemList();
+        renderHistoryList();
+      }
+    }, (err) => {
+      console.warn('Firestore listen failed:', err);
+      if (syncStatusEl) syncStatusEl.textContent = 'Connection error';
+    });
+  }
+
+  function isCustom(item){ return item.type === 'custom'; }
+
+  function seatTotal(tableNo, seatNo){
+    const data = orders[tableNo][seatNo];
+    let total = 0;
+    for (const item of MENU){
+      const rec = data[item.id];
+      if (!rec) continue;
+      if (isCustom(item)){
+        total += (rec.qty || 0) * (rec.price || item.defaultPrice);
+      } else {
+        for (const v of item.variants) total += (rec[v.k] || 0) * v.price;
+      }
+    }
+    return total;
+  }
+
+  function seatItemCount(tableNo, seatNo){
+    const data = orders[tableNo][seatNo];
+    let count = 0;
+    for (const item of MENU){
+      const rec = data[item.id];
+      if (!rec) continue;
+      if (isCustom(item)) count += (rec.qty || 0);
+      else for (const v of item.variants) count += (rec[v.k] || 0);
+    }
+    return count;
+  }
+
+  function hallTotal(){
+    let total = 0;
+    for (let t=1;t<=8;t++) for (let s=1;s<=4;s++) total += seatTotal(t,s);
+    return total;
+  }
+
+  function renderHall(){
+    const hall = document.getElementById('hall');
+    hall.innerHTML = '';
+    COLUMNS.forEach(col => {
+      const colEl = document.createElement('div');
+      colEl.className = 'col';
+      const label = document.createElement('div');
+      label.className = 'col-label';
+      label.textContent = col.label;
+      colEl.appendChild(label);
+
+      const tablesWrap = document.createElement('div');
+      tablesWrap.className = 'col-tables';
+      col.tables.forEach(tableNo => {
+        tablesWrap.appendChild(renderTable(tableNo));
+      });
+      colEl.appendChild(tablesWrap);
+      hall.appendChild(colEl);
+    });
+    document.getElementById('hallTotal').textContent = '₹' + hallTotal();
+  }
+
+  function renderTable(tableNo){
+    const unit = document.createElement('div');
+    unit.className = 'table-unit';
+
+    const top = document.createElement('div');
+    top.className = 'tabletop';
+    top.innerHTML = `<div class="num">${tableNo}</div>`;
+    unit.appendChild(top);
+
+    for (let seatNo=1; seatNo<=4; seatNo++){
+      const chair = document.createElement('button');
+      chair.className = 'chair c' + seatNo;
+      const amt = seatTotal(tableNo, seatNo);
+      const count = seatItemCount(tableNo, seatNo);
+      const histCount = history[tableNo][seatNo].length;
+      if (count > 0) chair.classList.add('has-order');
+      if (histCount > 0) chair.classList.add('has-history');
+      chair.innerHTML = `<span class="seat-no">Seat ${seatNo}</span><span class="amt">₹${amt}</span><span class="hist-dot">${histCount}</span>`;
+      chair.addEventListener('click', () => openModal(tableNo, seatNo));
+      unit.appendChild(chair);
+    }
+    return unit;
+  }
+
+  function openModal(tableNo, seatNo){
+    activeTable = tableNo; activeSeat = seatNo; activeTab = 'order';
+    document.getElementById('modalTitle').textContent = `Table ${tableNo} · Seat ${seatNo}`;
+    setTab('order');
+    renderItemList();
+    renderHistoryList();
+    document.getElementById('overlay').classList.add('open');
+  }
+
+  function closeModal(){
+    document.getElementById('overlay').classList.remove('open');
+    renderHall();
+  }
+
+  function setTab(tab){
+    activeTab = tab;
+    document.getElementById('tabOrder').classList.toggle('active', tab==='order');
+    document.getElementById('tabHistory').classList.toggle('active', tab==='history');
+    document.getElementById('itemList').style.display = tab==='order' ? 'block' : 'none';
+    document.getElementById('historyList').style.display = tab==='history' ? 'block' : 'none';
+  }
+
+  function getQty(itemId, variantKey){
+    const seatData = orders[activeTable][activeSeat];
+    if (!seatData[itemId]) return 0;
+    return seatData[itemId][variantKey] || 0;
+  }
+
+  function setQty(itemId, variantKey, qty){
+    qty = Math.max(0, Math.min(10, qty));
+    const seatData = orders[activeTable][activeSeat];
+    if (!seatData[itemId]) seatData[itemId] = {};
+    seatData[itemId][variantKey] = qty;
+    persist();
+  }
+
+  function getCustom(itemId, item){
+    const seatData = orders[activeTable][activeSeat];
+    if (!seatData[itemId]) seatData[itemId] = { price:item.defaultPrice, qty:0 };
+    return seatData[itemId];
+  }
+
+  function renderItemList(){
+    const list = document.getElementById('itemList');
+    list.innerHTML = '';
+    MENU.forEach(item => {
+      const row = document.createElement('div');
+      row.className = 'item-row';
+      const nameEl = document.createElement('div');
+      nameEl.className = 'item-name';
+      nameEl.textContent = item.name;
+      row.appendChild(nameEl);
+
+      if (isCustom(item)){
+        const rec = getCustom(item.id, item);
+        const picker = document.createElement('div');
+        picker.className = 'price-picker';
+        picker.innerHTML = `<span class="price-custom-label">Price:</span>` +
+          item.options.map(p => `<button type="button" class="price-chip ${rec.price===p?'active':''}" data-price="${p}">₹${p}</button>`).join('') +
+          `<input type="number" class="price-custom" min="1" placeholder="custom" value="${item.options.includes(rec.price)?'':rec.price}">`;
+        picker.querySelectorAll('.price-chip').forEach(chip => {
+          chip.addEventListener('click', () => {
+            rec.price = parseInt(chip.dataset.price, 10);
+            persist();
+            renderItemList();
+          });
+        });
+        const customInput = picker.querySelector('.price-custom');
+        customInput.addEventListener('change', () => {
+          const val = parseInt(customInput.value, 10);
+          if (val > 0){ rec.price = val; persist(); renderItemList(); }
+        });
+        row.appendChild(picker);
+
+        const vRow = document.createElement('div');
+        vRow.className = 'variant-row';
+        vRow.innerHTML = `
+          <span class="v-label">Quantity at ₹${rec.price}</span>
+          <span class="stepper">
+            <button data-act="minus" ${rec.qty<=0?'disabled':''} aria-label="Decrease ${item.name}">−</button>
+            <span class="qty">${rec.qty}</span>
+            <button data-act="plus" ${rec.qty>=10?'disabled':''} aria-label="Increase ${item.name}">+</button>
+          </span>`;
+        const [minusBtn, plusBtn] = vRow.querySelectorAll('button');
+        minusBtn.addEventListener('click', () => { rec.qty = Math.max(0, rec.qty-1); persist(); renderItemList(); updateSeatTotalDisplay(); });
+        plusBtn.addEventListener('click', () => { rec.qty = Math.min(10, rec.qty+1); persist(); renderItemList(); updateSeatTotalDisplay(); });
+        row.appendChild(vRow);
+      } else {
+        item.variants.forEach(v => {
+          const vRow = document.createElement('div');
+          vRow.className = 'variant-row';
+          const qty = getQty(item.id, v.k);
+          vRow.innerHTML = `
+            <span class="v-label">${v.label}</span>
+            <span class="v-price">₹${v.price}</span>
+            <span class="stepper">
+              <button data-act="minus" ${qty<=0?'disabled':''} aria-label="Decrease ${item.name} ${v.label}">−</button>
+              <span class="qty">${qty}</span>
+              <button data-act="plus" ${qty>=10?'disabled':''} aria-label="Increase ${item.name} ${v.label}">+</button>
+            </span>`;
+          const [minusBtn, plusBtn] = vRow.querySelectorAll('button');
+          minusBtn.addEventListener('click', () => { setQty(item.id, v.k, getQty(item.id,v.k)-1); renderItemList(); updateSeatTotalDisplay(); });
+          plusBtn.addEventListener('click', () => { setQty(item.id, v.k, getQty(item.id,v.k)+1); renderItemList(); updateSeatTotalDisplay(); });
+          row.appendChild(vRow);
+        });
+      }
+      list.appendChild(row);
+    });
+    updateSeatTotalDisplay();
+  }
+
+  function renderHistoryList(){
+    const wrap = document.getElementById('historyList');
+    const entries = history[activeTable][activeSeat];
+    document.getElementById('histCount').textContent = entries.length;
+    wrap.innerHTML = '';
+    if (entries.length === 0){
+      wrap.innerHTML = `<div class="empty-hist">No completed orders yet for this seat.</div>`;
+      return;
+    }
+    // most recent first
+    [...entries].reverse().forEach(entry => {
+      const el = document.createElement('div');
+      el.className = 'hist-entry';
+      const items = entry.lines.map(l => `<li>${l.name} × ${l.qty} — ₹${l.lineTotal}</li>`).join('');
+      el.innerHTML = `
+        <div class="hist-top"><span>${entry.time}</span><span class="hist-total">₹${entry.total}</span></div>
+        <ul>${items}</ul>`;
+      wrap.appendChild(el);
+    });
+  }
+
+  function updateSeatTotalDisplay(){
+    document.getElementById('seatTotal').textContent = '₹' + seatTotal(activeTable, activeSeat);
+  }
+
+  function buildOrderLines(tableNo, seatNo){
+    const data = orders[tableNo][seatNo];
+    const lines = [];
+    MENU.forEach(item => {
+      const rec = data[item.id];
+      if (!rec) return;
+      if (isCustom(item)){
+        if (rec.qty > 0) lines.push({ name:`${item.name} (₹${rec.price})`, qty:rec.qty, price:rec.price, lineTotal:rec.qty*rec.price });
+      } else {
+        item.variants.forEach(v => {
+          const qty = rec[v.k] || 0;
+          if (qty > 0) lines.push({ name:`${item.name} – ${v.label}`, qty, price:v.price, lineTotal:qty*v.price });
+        });
+      }
+    });
+    return lines;
+  }
+
+  function completeOrder(){
+    const total = seatTotal(activeTable, activeSeat);
+    if (total <= 0){
+      setTab('history');
+      return;
+    }
+    const lines = buildOrderLines(activeTable, activeSeat);
+    history[activeTable][activeSeat].push({
+      time: new Date().toLocaleString([], { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' }),
+      lines,
+      total
+    });
+    orders[activeTable][activeSeat] = {}; // clear seat for the next guest
+    persist();
+    renderItemList();
+    renderHistoryList();
+    setTab('history');
+  }
+
+  document.getElementById('closeBtn').addEventListener('click', closeModal);
+  document.getElementById('saveBtn').addEventListener('click', closeModal);
+  document.getElementById('completeBtn').addEventListener('click', completeOrder);
+  document.getElementById('tabOrder').addEventListener('click', () => setTab('order'));
+  document.getElementById('tabHistory').addEventListener('click', () => setTab('history'));
+  document.getElementById('overlay').addEventListener('click', (e) => {
+    if (e.target.id === 'overlay') closeModal();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && document.getElementById('overlay').classList.contains('open')) closeModal();
+  });
+
+  renderHall();
+</script>
+
+</body>
+</html>
