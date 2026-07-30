@@ -513,17 +513,17 @@
   // Menu kept in the order given — most-used items first, plus the newly added items.
   const MENU = [
     { id:'tadka',   name:'Dal Tadka',      variants:[{k:'half',label:'Half',price:30},{k:'full',label:'Full',price:60}] },
-    { id:'roti',    name:'Roti',           variants:[{k:'pc',label:'Per piece',price:5}] },
+    { id:'roti',    name:'Roti',           type:'multi-custom', basePrice:5 },
     { id:'chawal',  name:'Chawal (Rice)',  variants:[{k:'half',label:'Half',price:20},{k:'full',label:'Full',price:40}] },
     { id:'chana',   name:'Chana Masala',   variants:[{k:'half',label:'Half',price:30},{k:'full',label:'Full',price:60}] },
     { id:'paneer',  name:'Paneer',         variants:[{k:'half',label:'Half',price:50},{k:'full',label:'Full',price:100}] },
     { id:'mixveg',  name:'Mix Veg',        variants:[{k:'half',label:'Half',price:50},{k:'full',label:'Full',price:100}] },
     { id:'egg',     name:'Egg Curry',      variants:[{k:'p1',label:'1 piece',price:20},{k:'half',label:'Half (2 pc)',price:40},{k:'full',label:'Full (4 pc)',price:80}] },
-    { id:'chicken', name:'Chicken',        variants:[{k:'pc',label:'Per piece',price:30}] },
-    { id:'fish',    name:'Fish',           variants:[{k:'pc',label:'Per piece',price:30}] },
-    { id:'water', name:'पानी बोतल (Water Bottle)', variants:[{k:'p10', label:'₹10 bottle', price:10}] },
-{ id:'cigarette', name:'सिगरेट (Cigarette)', variants:[{k:'p10', label:'₹10', price:10}, {k:'p15', label:'₹15', price:15}] },
-{ id:'eggtadka', name:'अंडा तड़का (Egg Tadka)', type:'custom', options:[45,60,90], defaultPrice:45 },
+    { id:'chicken', name:'Chicken',        variants:[{k:'pc',label:'Per piece',price:30},{k:'half',label:'Half',price:60},{k:'full',label:'Full',price:120}] },
+    { id:'fish',    name:'Fish',           variants:[{k:'pc',label:'Per piece',price:30},{k:'half',label:'Half',price:60},{k:'full',label:'Full',price:120}] },
+    { id:'water',   name:'पानी बोतल (Water Bottle)', variants:[{k:'p10',label:'₹10 bottle',price:10},{k:'p15',label:'₹15 bottle',price:15},{k:'p20',label:'₹20 bottle',price:20}] },
+    { id:'cigarette', name:'सिगरेट (Cigarette)', variants:[{k:'p10',label:'₹10',price:10},{k:'p15',label:'₹15',price:15},{k:'p20',label:'₹20',price:20}] },
+    { id:'eggtadka', name:'अंडा तड़का (Egg Tadka)', type:'custom', options:[45,60,90], defaultPrice:45 },
     { id:'eggbhujiya', name:'अंडा भुजिया करी (Egg Bhujiya Curry)', variants:[{k:'p2',label:'2 pieces',price:40}] },
     { id:'omelette', name:'Omelette', variants:[{k:'full',label:'Full (2 egg)',price:30},{k:'half',label:'Half (1 egg)',price:15}] },
   ];
@@ -552,18 +552,16 @@
   // Get this from: Firebase Console → Project Settings → General
   // → "Your apps" → Web app → SDK setup and configuration
   // ============================================================
-
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyCrtiUDykYLlOirasVyAfGDq1V6X_EGom4",
+  const firebaseConfig = {
+    apiKey: "AIzaSyCrtiUDykYLlOirasVyAfGDq1V6X_EGom4",
   authDomain: "family--hotel.firebaseapp.com",
   projectId: "family--hotel",
   storageBucket: "family--hotel.firebasestorage.app",
   messagingSenderId: "933684295312",
   appId: "1:933684295312:web:a8e163d58228c227d78a15",
   measurementId: "G-XLN1Z5B9QR"
-};
+  };
+
   let db = null, hallDocRef = null, firebaseReady = false;
   const syncStatusEl = document.getElementById('syncStatus');
 
@@ -584,7 +582,7 @@ const firebaseConfig = {
   // Writes the full current state to Firestore (called after every order edit)
   function persist(){
     if (!firebaseReady) return;
-    hallDocRef.set({ orders, history }).catch(e => {
+    hallDocRef.set({ orders, history, lastResetDate }).catch(e => {
       console.warn('Firestore save failed:', e);
       if (syncStatusEl) syncStatusEl.textContent = 'Save failed — check connection';
     });
@@ -600,11 +598,56 @@ const firebaseConfig = {
     }
   }
 
+  // ---- Daily auto-reset at 1:00 AM ----
+  // Anything before 1 AM still counts as "yesterday's" business day, so the
+  // reset only fires once the clock actually passes 1 AM.
+  let lastResetDate = null;
+
+  function businessDateKey(d = new Date()){
+    const dt = new Date(d);
+    if (dt.getHours() < 1) dt.setDate(dt.getDate() - 1);
+    const y = dt.getFullYear();
+    const m = String(dt.getMonth()+1).padStart(2,'0');
+    const day = String(dt.getDate()).padStart(2,'0');
+    return `${y}-${m}-${day}`;
+  }
+
+  function runDailyResetIfDue(){
+    const todayKey = businessDateKey();
+    if (lastResetDate === null){
+      // First time we see a date — just set the baseline, don't wipe fresh data.
+      lastResetDate = todayKey;
+      return;
+    }
+    if (lastResetDate !== todayKey){
+      for (let t=1;t<=8;t++){
+        for (let s=1;s<=4;s++){
+          orders[t][s] = {};
+          history[t][s] = [];
+        }
+      }
+      lastResetDate = todayKey;
+      persist();
+      renderHall();
+      if (document.getElementById('overlay').classList.contains('open') && activeTable){
+        renderItemList();
+        renderHistoryList();
+      }
+    }
+  }
+
+  // Check every 5 minutes in case the page is left open overnight — this way
+  // the reset fires close to 1 AM even without anyone reopening the site.
+  setInterval(runDailyResetIfDue, 5 * 60 * 1000);
+
   if (firebaseReady){
     hallDocRef.onSnapshot((doc) => {
       if (doc.exists){
-        mergeIncoming(doc.data());
+        const data = doc.data();
+        mergeIncoming(data);
+        if (data.lastResetDate) lastResetDate = data.lastResetDate;
       }
+      runDailyResetIfDue();
       if (syncStatusEl){
         syncStatusEl.textContent = doc.metadata.fromCache ? 'Offline (showing cached data)' : 'Synced ✓ live';
       }
@@ -620,9 +663,12 @@ const firebaseConfig = {
       console.warn('Firestore listen failed:', err);
       if (syncStatusEl) syncStatusEl.textContent = 'Connection error';
     });
+  } else {
+    runDailyResetIfDue();
   }
 
   function isCustom(item){ return item.type === 'custom'; }
+  function isMultiCustom(item){ return item.type === 'multi-custom'; }
 
   function seatTotal(tableNo, seatNo){
     const data = orders[tableNo][seatNo];
@@ -632,6 +678,9 @@ const firebaseConfig = {
       if (!rec) continue;
       if (isCustom(item)){
         total += (rec.qty || 0) * (rec.price || item.defaultPrice);
+      } else if (isMultiCustom(item)){
+        total += (rec.base?.qty || 0) * item.basePrice;
+        (rec.custom || []).forEach(b => { total += (b.qty || 0) * (b.price || 0); });
       } else {
         for (const v of item.variants) total += (rec[v.k] || 0) * v.price;
       }
@@ -646,6 +695,10 @@ const firebaseConfig = {
       const rec = data[item.id];
       if (!rec) continue;
       if (isCustom(item)) count += (rec.qty || 0);
+      else if (isMultiCustom(item)){
+        count += (rec.base?.qty || 0);
+        (rec.custom || []).forEach(b => { count += (b.qty || 0); });
+      }
       else for (const v of item.variants) count += (rec[v.k] || 0);
     }
     return count;
@@ -745,6 +798,14 @@ const firebaseConfig = {
     return seatData[itemId];
   }
 
+  function getMultiCustom(itemId){
+    const seatData = orders[activeTable][activeSeat];
+    if (!seatData[itemId]) seatData[itemId] = { base:{ qty:0 }, custom:[] };
+    if (!seatData[itemId].base) seatData[itemId].base = { qty:0 };
+    if (!seatData[itemId].custom) seatData[itemId].custom = [];
+    return seatData[itemId];
+  }
+
   function renderItemList(){
     const list = document.getElementById('itemList');
     list.innerHTML = '';
@@ -790,6 +851,63 @@ const firebaseConfig = {
         minusBtn.addEventListener('click', () => { rec.qty = Math.max(0, rec.qty-1); persist(); renderItemList(); updateSeatTotalDisplay(); });
         plusBtn.addEventListener('click', () => { rec.qty = Math.min(10, rec.qty+1); persist(); renderItemList(); updateSeatTotalDisplay(); });
         row.appendChild(vRow);
+      } else if (isMultiCustom(item)){
+        const rec = getMultiCustom(item.id);
+
+        // Standard-price row (e.g. "Quantity at ₹5")
+        const baseRow = document.createElement('div');
+        baseRow.className = 'variant-row';
+        baseRow.innerHTML = `
+          <span class="v-label">Quantity at ₹${item.basePrice}</span>
+          <span class="stepper">
+            <button data-act="minus" ${rec.base.qty<=0?'disabled':''} aria-label="Decrease ${item.name}">−</button>
+            <span class="qty">${rec.base.qty}</span>
+            <button data-act="plus" ${rec.base.qty>=10?'disabled':''} aria-label="Increase ${item.name}">+</button>
+          </span>`;
+        const [baseMinus, basePlus] = baseRow.querySelectorAll('button');
+        baseMinus.addEventListener('click', () => { rec.base.qty = Math.max(0, rec.base.qty-1); persist(); renderItemList(); updateSeatTotalDisplay(); });
+        basePlus.addEventListener('click', () => { rec.base.qty = Math.min(10, rec.base.qty+1); persist(); renderItemList(); updateSeatTotalDisplay(); });
+        row.appendChild(baseRow);
+
+        // Extra custom-price rows added below the standard one
+        (rec.custom || []).forEach((batch, idx) => {
+          const cRow = document.createElement('div');
+          cRow.className = 'variant-row';
+          cRow.innerHTML = `
+            <span class="v-label" style="display:flex;align-items:center;gap:6px;">
+              ₹<input type="number" class="price-custom" min="1" value="${batch.price}" style="width:56px;">
+            </span>
+            <span class="stepper">
+              <button data-act="minus" ${batch.qty<=0?'disabled':''} aria-label="Decrease custom ${item.name}">−</button>
+              <span class="qty">${batch.qty}</span>
+              <button data-act="plus" ${batch.qty>=10?'disabled':''} aria-label="Increase custom ${item.name}">+</button>
+            </span>
+            <button type="button" class="remove-batch" aria-label="Remove this custom ${item.name} price" style="border:none;background:none;color:var(--spice);font-size:16px;cursor:pointer;padding:2px 4px;">✕</button>`;
+          const priceInput = cRow.querySelector('.price-custom');
+          const [cMinus, cPlus] = cRow.querySelectorAll('.stepper button');
+          const removeBtn = cRow.querySelector('.remove-batch');
+          priceInput.addEventListener('change', () => {
+            const v = parseInt(priceInput.value, 10);
+            if (v > 0){ batch.price = v; persist(); updateSeatTotalDisplay(); }
+          });
+          cMinus.addEventListener('click', () => { batch.qty = Math.max(0, batch.qty-1); persist(); renderItemList(); updateSeatTotalDisplay(); });
+          cPlus.addEventListener('click', () => { batch.qty = Math.min(10, batch.qty+1); persist(); renderItemList(); updateSeatTotalDisplay(); });
+          removeBtn.addEventListener('click', () => { rec.custom.splice(idx, 1); persist(); renderItemList(); updateSeatTotalDisplay(); });
+          row.appendChild(cRow);
+        });
+
+        // Button to add another custom-price roti line
+        const addBtn = document.createElement('button');
+        addBtn.type = 'button';
+        addBtn.textContent = '+ Add custom ' + item.name.toLowerCase();
+        addBtn.style.cssText = 'margin-top:8px;border:1px dashed var(--chair-line);background:none;border-radius:8px;padding:6px 12px;font-size:12px;font-family:Inter,sans-serif;font-weight:600;color:var(--spice);cursor:pointer;';
+        addBtn.addEventListener('click', () => {
+          rec.custom.push({ price: item.basePrice, qty: 1 });
+          persist();
+          renderItemList();
+          updateSeatTotalDisplay();
+        });
+        row.appendChild(addBtn);
       } else {
         item.variants.forEach(v => {
           const vRow = document.createElement('div');
@@ -847,6 +965,11 @@ const firebaseConfig = {
       if (!rec) return;
       if (isCustom(item)){
         if (rec.qty > 0) lines.push({ name:`${item.name} (₹${rec.price})`, qty:rec.qty, price:rec.price, lineTotal:rec.qty*rec.price });
+      } else if (isMultiCustom(item)){
+        if (rec.base && rec.base.qty > 0) lines.push({ name:`${item.name} (₹${item.basePrice})`, qty:rec.base.qty, price:item.basePrice, lineTotal:rec.base.qty*item.basePrice });
+        (rec.custom || []).forEach(b => {
+          if (b.qty > 0) lines.push({ name:`${item.name} (custom ₹${b.price})`, qty:b.qty, price:b.price, lineTotal:b.qty*b.price });
+        });
       } else {
         item.variants.forEach(v => {
           const qty = rec[v.k] || 0;
