@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>About Us · Table Order Manager</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;}
+  body{margin:0;background:#fbf1de;color:#2a231c;font-family:'Inter',sans-serif;line-height:1.7;}
+  header{padding:24px 32px;border-bottom:1px solid #e7d9bf;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;}
+  header a{color:#b23a2e;text-decoration:none;font-weight:600;font-size:14px;margin-left:18px;}
+  header .brand{font-family:'Fraunces',serif;font-weight:700;font-size:20px;color:#2a231c;}
+  main{max-width:680px;margin:0 auto;padding:48px 24px 80px;}
+  h1{font-family:'Fraunces',serif;font-size:32px;margin-bottom:8px;}
+  p{font-size:15.5px;color:#3d342a;}
+  footer{text-align:center;padding:24px;font-size:12px;color:#8a7c66;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">Jai Maa Family Hotel</div>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="about.html">About</a>
+    <a href="privacy.html">Privacy Policy</a>
+    <a href="contact.html">Contact</a>
+  </nav>
+</header>
+
+<main>
+  <h1>About Us</h1>
+  <p>
+    Jai Maa Family Hotel is a family-run dining establishment located in
+    Ranchi, Jharkhand. We serve fresh, home-style meals to our guests across
+    our 8-table dining hall, and pride ourselves on quick, friendly service
+    and consistently good food.
+  </p>
+
+  <h1 style="font-size:24px;margin-top:40px;">About This Tool</h1>
+  <p>
+    This website is a <strong>Table Order Manager</strong> — an internal tool
+    built for our restaurant's own staff to take, track, and manage seat-wise
+    orders across our dining hall in real time. It is not a public ordering
+    or booking platform; it is used by our own team to run day-to-day service
+    more smoothly.
+  </p>
+  <p>
+    It was built to replace paper order slips with a simple digital system —
+    letting staff record what each seat has ordered, see running totals per
+    table, and keep a same-day history of completed orders.
+  </p>
+</main>
+
+<footer>© <span id="y"></span> Jai Maa Family Hotel, Ranchi. All rights reserved.</footer>
+<script>document.getElementById('y').textContent = new Date().getFullYear();</script>
+</body>
+</html>
