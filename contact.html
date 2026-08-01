@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contact Us · Table Order Manager</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;}
+  body{margin:0;background:#fbf1de;color:#2a231c;font-family:'Inter',sans-serif;line-height:1.7;}
+  header{padding:24px 32px;border-bottom:1px solid #e7d9bf;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;}
+  header a{color:#b23a2e;text-decoration:none;font-weight:600;font-size:14px;margin-left:18px;}
+  header .brand{font-family:'Fraunces',serif;font-weight:700;font-size:20px;color:#2a231c;}
+  main{max-width:680px;margin:0 auto;padding:48px 24px 80px;}
+  h1{font-family:'Fraunces',serif;font-size:32px;margin-bottom:8px;}
+  p{font-size:15.5px;color:#3d342a;}
+  .card{background:#fffaf1;border:1px solid #e7d9bf;border-radius:14px;padding:24px 26px;margin-top:24px;}
+  .card div{margin-bottom:10px;font-size:14.5px;}
+  .card strong{display:inline-block;width:90px;color:#8a7c66;font-weight:600;}
+  footer{text-align:center;padding:24px;font-size:12px;color:#8a7c66;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">Jai Maa Family Hotel</div>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="about.html">About</a>
+    <a href="privacy.html">Privacy Policy</a>
+    <a href="contact.html">Contact</a>
+  </nav>
+</header>
+
+<main>
+  <h1>Contact Us</h1>
+  <p>We'd love to hear from you — reach out using any of the details below.</p>
+
+  <div class="card">
+    <div><strong>Address</strong> Ranchi, Jharkhand, India</div>
+    <div><strong>Phone</strong> [+91 9508102759]</div>
+    <div><strong>Email</strong> bajrangk12140022@gmail.com</div>
+    <div><strong>Hours</strong> [e.g. 8 AM – 11 PM, all days]</div>
+  </div>
+</main>
+
+<footer>© <span id="y"></span> Jai Maa Family Hotel, Ranchi. All rights reserved.</footer>
+<script>document.getElementById('y').textContent = new Date().getFullYear();</script>
+</body>
+</html>
